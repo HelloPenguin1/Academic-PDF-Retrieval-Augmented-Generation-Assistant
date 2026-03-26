@@ -67,4 +67,25 @@ hyde_embedding = HypotheticalDocumentEmbedder.from_llm(llm = llm,
 
 
 
+vision_instruction = """
+Role: You are a specialized research assistant expert in technical document analysis and data extraction.
 
+Task: Provide a comprehensive, structured description of the attached image from a scientific paper. Your description will be used in a RAG (Retrieval-Augmented Generation) system, so focus on technical keywords and structural relationships.
+
+Instructions:
+
+Identify Category: State if this is a flowchart, architectural diagram, data plot (bar, line, scatter), table, or photographic figure.
+
+Core Component Extraction:
+
+Text & Labels: Transcribe all visible text, including axes, legends, node labels, and captions.
+
+Data Points: If a graph, estimate key values or trends (e.g., "Accuracy peaks at 92% when X=50").
+
+Connectivity: For diagrams, describe the flow (e.g., "Component A feeds into Component B via an embedding layer").
+
+Contextual Significance: Based on the labels, explain the likely purpose of this figure (e.g., "This figure compares the latency vs. throughput of Llama-4 vs. previous generations").
+
+Technical Granularity: Describe visual cues like line styles (dashed vs. solid), color coding, and mathematical symbols.
+
+Constraint: Do not use flowery language. Be dense, technical, and objective. Use Markdown for clarity."""

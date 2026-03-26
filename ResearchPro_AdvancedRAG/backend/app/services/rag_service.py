@@ -4,6 +4,7 @@ from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.runnables.history import RunnableWithMessageHistory
+from config.config import llm_reformulate
 
 
 class RAG_Pipeline:
@@ -106,7 +107,7 @@ class RAG_Pipeline:
 
     def create_rag_chain(self, retriever):
         history_aware_retriever = create_history_aware_retriever(
-            self.llm,
+            llm_reformulate,
             retriever,
             self.reformulation_prompt
         )
@@ -134,8 +135,6 @@ class RAG_Pipeline:
         )
 
         return self.conversational_rag
-
-
 
 
     def query(self, question: str, session_id: str) -> str:
