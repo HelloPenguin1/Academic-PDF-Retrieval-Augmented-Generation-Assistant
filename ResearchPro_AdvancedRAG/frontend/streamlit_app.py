@@ -154,7 +154,7 @@ with st.sidebar:
     st.text_input("API URL", value=API_BASE_URL, key="api_url", help="FastAPI server URL")
 
 # Main chat interface
-st.title("Academia RAG Assistant")
+st.title("Academia Multimodal RAG Assistant")
 
 if not st.session_state.file_uploaded:
     st.info("Please upload a PDF document in the sidebar to get started!")
@@ -207,14 +207,14 @@ else:
                     })
                 elif response:
                     error_data = response.json()
-                    error_message = f"❌ Error: {error_data.get('detail', 'Unknown error')}"
+                    error_message = f"Error: {error_data.get('detail', 'Unknown error')}"
                     message_placeholder.markdown(error_message)
                     st.session_state.chat_messages.append({
                         "role": "assistant", 
                         "content": error_message
                     })
                 else:
-                    error_message = "❌ Failed to connect to API"
+                    error_message = "Failed to connect to API"
                     message_placeholder.markdown(error_message)
                     st.session_state.chat_messages.append({
                         "role": "assistant", 
@@ -239,7 +239,7 @@ else:
 st.markdown("---")
 st.markdown(
     "<div style='text-align: center; color: #888;'>"
-    "🔬 Research Assistant RAG System | API Version | Built with FastAPI and advanced RAG methods"
+    "🔬 Research Assistant RAG System | API Version | Built with FastAPI"
     "</div>", 
     unsafe_allow_html=True
 )

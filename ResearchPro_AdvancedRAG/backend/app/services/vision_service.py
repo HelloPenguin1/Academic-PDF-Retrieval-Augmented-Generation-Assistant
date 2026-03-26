@@ -2,7 +2,7 @@ from unstructured.partition.pdf import partition_pdf
 from unstructured.chunking.title import chunk_by_title
 from langchain.schema import Document
 from langchain_core.messages import HumanMessage, SystemMessage
-from config.config import llm_summarize, vision_model, groq_client
+from config.config import llm_summarize, vision_model, groq_client, vision_instruction
 import base64
 from unstructured.documents.elements import Image as UnstructuredImage
 
@@ -69,14 +69,15 @@ class MultimodalProcessor:
                 elements.append(el)
 
             elements.extend(list(hi_res_elements))
+            elements.sort(key=lambda el: getattr(el.metadata, "page_number", 0))
 
         # Step 3: Chunking
         print("Chunking by title...")
         chunks = chunk_by_title(
             elements,
-            max_characters=3000,
-            new_after_n_chars=2400,
-            combine_text_under_n_chars=500
+            max_characters=1500,
+            new_after_n_chars=1200,
+            combine_text_under_n_chars=300
         )
 
         # Step 4: Convert to Document objects 
@@ -111,7 +112,7 @@ class MultimodalProcessor:
                     {
                         "role": "user",
                         "content": [
-                            {"type": "text", "text": "Describe this image in detail."},
+                            {"type": "text", "text": vision_instruction},
                             {
                                 "type": "image_url",
                                 "image_url": {
