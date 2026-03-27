@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from typing import Annotated
 from pydantic import BaseModel
-from config.config import llm, hyde_embedding, hf_reranker_encoder
+from config.config import llm, hf_reranker_encoder
 from backend.app.services.document_service import DocumentProcessor
 from backend.app.services.rag_service import RAG_Pipeline
 from backend.app.services.reranker import ReRanker_Model

@@ -3,6 +3,8 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.chains import HypotheticalDocumentEmbedder
 import torch
 from groq import Groq
+from transformers import AutoTokenizer
+from docling_core.transforms.chunker.tokenizer.huggingface import HuggingFaceTokenizer
 
 import os
 from dotenv import load_dotenv
@@ -17,6 +19,14 @@ torch.set_num_threads(4)
 groq_api_key = os.getenv("GROQ_API_KEY")
 
 ##############################################################################################
+
+# Tokenizer for Docling's Hybrid Chunking
+
+
+hf_tokenizer = AutoTokenizer.from_pretrained("sentence-transformers/all-MiniLM-L6-v2", local_files_only = False)
+chunking_tokenizer = HuggingFaceTokenizer(tokenizer=hf_tokenizer, )
+
+
 
 hf_embeddings = HuggingFaceEmbeddings(
     model_name = "BAAI/bge-small-en-v1.5",
@@ -46,8 +56,8 @@ llm_summarize = ChatGroq(model="llama-3.3-70b-versatile",
                )
 
 
-vision_model = "meta-llama/llama-4-scout-17b-16e-instruct"
-groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+# vision_model = "meta-llama/llama-4-scout-17b-16e-instruct"
+# groq_client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 ##############################################################################################
 
@@ -56,36 +66,14 @@ hf_reranker_encoder = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
 ##############################################################################################
 
-hyde_base_embedding =  HuggingFaceEmbeddings(
-    model_name = "BAAI/bge-small-en-v1.5",
-    encode_kwargs = {'normalize_embeddings':True},
-)
+# hyde_base_embedding =  HuggingFaceEmbeddings(
+#     model_name = "BAAI/bge-small-en-v1.5",
+#     encode_kwargs = {'normalize_embeddings':True},
+# )
 
-hyde_embedding = HypotheticalDocumentEmbedder.from_llm(llm = llm, 
-                                              base_embeddings = hyde_base_embedding,
-                                              prompt_key="sci_fact")
+# hyde_embedding = HypotheticalDocumentEmbedder.from_llm(llm = llm, 
+#                                               base_embeddings = hyde_base_embedding,
+#                                               prompt_key="sci_fact")
 
 
 
-vision_instruction = """
-Role: You are a specialized research assistant expert in technical document analysis and data extraction.
-
-Task: Provide a comprehensive, structured description of the attached image from a scientific paper. Your description will be used in a RAG (Retrieval-Augmented Generation) system, so focus on technical keywords and structural relationships.
-
-Instructions:
-
-Identify Category: State if this is a flowchart, architectural diagram, data plot (bar, line, scatter), table, or photographic figure.
-
-Core Component Extraction:
-
-Text & Labels: Transcribe all visible text, including axes, legends, node labels, and captions.
-
-Data Points: If a graph, estimate key values or trends (e.g., "Accuracy peaks at 92% when X=50").
-
-Connectivity: For diagrams, describe the flow (e.g., "Component A feeds into Component B via an embedding layer").
-
-Contextual Significance: Based on the labels, explain the likely purpose of this figure (e.g., "This figure compares the latency vs. throughput of Llama-4 vs. previous generations").
-
-Technical Granularity: Describe visual cues like line styles (dashed vs. solid), color coding, and mathematical symbols.
-
-Constraint: Do not use flowery language. Be dense, technical, and objective. Use Markdown for clarity."""
