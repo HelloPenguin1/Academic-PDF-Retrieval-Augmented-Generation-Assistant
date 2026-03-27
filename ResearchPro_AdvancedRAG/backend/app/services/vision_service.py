@@ -4,12 +4,12 @@ from langchain.schema import Document
 from langchain_core.messages import HumanMessage, SystemMessage
 from config.config import llm_summarize, vision_model, groq_client, vision_instruction
 import base64
+import re
 from unstructured.documents.elements import Image as UnstructuredImage
 
 class MultimodalProcessor:
     def __init__(self):
         self.llm = llm_summarize
-        self.vision_model = vision_model
         self.groq_client = groq_client
         self.image_cache = {}
         
@@ -30,16 +30,12 @@ class MultimodalProcessor:
             if page is None:
                 continue
             if (
-                category in ("Table", "Image", "Graphic", "Figure")
+                category in ("Table")
                 or "table" in text.lower()
-                or "figure" in text.lower()
-                or "chart" in text.lower()
-                or "diagram" in text.lower()
-                or "plot" in text.lower()
             ):
                 pages_with_tables.add(page)
 
-        print(f"Detected table/image pages: {sorted(list(pages_with_tables))}")
+        print(f"Detected pages with tables: {sorted(list(pages_with_tables))}")
         
     
 
@@ -53,7 +49,7 @@ class MultimodalProcessor:
                     filename=filepath,
                     strategy="hi_res",
                     infer_table_structure=True,
-                    extract_image_block_types=["Table", "Image", "Figure"],
+                    extract_image_block_types=["Table"],
                     extract_image_block_to_payload=True,
                     languages=["eng"],
                     page_range=",".join(str(p) for p in pages_with_tables)
@@ -69,7 +65,6 @@ class MultimodalProcessor:
                 elements.append(el)
 
             elements.extend(list(hi_res_elements))
-            elements.sort(key=lambda el: getattr(el.metadata, "page_number", 0))
 
         # Step 3: Chunking
         print("Chunking by title...")
@@ -86,8 +81,6 @@ class MultimodalProcessor:
         return processed_docs
     
     
-
-    def describe_image(self, base64_img: str) -> str:
         
         if len(base64_img) > 2_000_000:
             return "[Image too large to analyze]"
@@ -162,49 +155,73 @@ class MultimodalProcessor:
                     except Exception:
                         image_descriptions[img] = "[Image analysis failed]"
         
+        # Regex to extract figure/table labels from surrounding text
+        fig_pattern = re.compile(
+            r'((?:Fig(?:ure)?|Table|Chart|Diagram|Appendix)\s*\.?\s*\d+[a-zA-Z]?(?:\s*[:\-–—]\s*[^\n]{0,120})?)',
+            re.IGNORECASE
+        )
+
         # Now process chunks using pre-computed descriptions
         for chunk in chunks:
             text = chunk.text or ""
             tables = []
             images = []
 
+            # Extract figure/table labels from the chunk text
+            labels_in_text = fig_pattern.findall(text)
+
             if hasattr(chunk, "metadata") and hasattr(chunk.metadata, "orig_elements"):
                 for element in chunk.metadata.orig_elements:
                     if getattr(element, "category", None) == "Table":
                         html = getattr(element.metadata, "text_as_html", element.text)
-                        tables.append(html)
+                        # Try to get label from element text or caption
+                        el_text = getattr(element, "text", "") or ""
+                        el_labels = fig_pattern.findall(el_text)
+                        tables.append({"html": html, "labels": el_labels})
                     elif isinstance(element, UnstructuredImage):
                         if hasattr(element.metadata, "image_base64"):
                             base64_img = element.metadata.image_base64
-                            # Use pre-computed description
                             description = image_descriptions.get(base64_img, "[No description]")
+                            # Try to get label from element caption metadata
+                            caption = getattr(element.metadata, "image_caption", "") or ""
+                            cap_labels = fig_pattern.findall(caption)
                             images.append({
                                 "base64": base64_img,
-                                "description": description
+                                "description": description,
+                                "labels": cap_labels
                             })
 
-            # Enrich page_content with tables and image descriptions
+            # Enrich page_content — embed labels so retrieval can match "Figure 2"
             enriched_content = text
-            
+
+            if labels_in_text:
+                # Deduplicate and prepend all found labels as a searchable header
+                unique_labels = list(dict.fromkeys(labels_in_text))
+                enriched_content = "REFERENCES: " + " | ".join(unique_labels) + "\n\n" + enriched_content
+
             if tables:
                 enriched_content += "\n\n--- TABLES ---\n"
-                for i, table_html in enumerate(tables, 1):
-                    enriched_content += f"\n[TABLE {i}]\n{table_html}\n"
-            
+                for i, tbl in enumerate(tables, 1):
+                    label_str = " ".join(tbl["labels"]) if tbl["labels"] else f"Table {i}"
+                    enriched_content += f"\n[{label_str}]\n{tbl['html']}\n"
+
             if images:
                 enriched_content += "\n\n--- IMAGE DESCRIPTIONS ---\n"
                 for i, img in enumerate(images, 1):
-                    enriched_content += f"\n[IMAGE {i}]: {img['description']}\n"
+                    label_str = " ".join(img["labels"]) if img["labels"] else ""
+                    prefix = f"[{label_str}] " if label_str else ""
+                    enriched_content += f"\n{prefix}{img['description']}\n"
 
             doc = Document(
                 page_content=enriched_content,
                 metadata={
                     "source": "pdf",
                     "has_tables": len(tables) > 0,
-                    "original_tables": tables,
+                    "original_tables": [t["html"] for t in tables],
                     "has_images": len(images) > 0,
-                    "original_images": images,
+                    "original_images": [{"base64": img["base64"], "description": img["description"]} for img in images],
                     "image_description": [img["description"] for img in images],
+                    "figure_labels": labels_in_text,
                     "page_number": getattr(chunk.metadata, "page_number", None),
                 },
             )
@@ -212,40 +229,3 @@ class MultimodalProcessor:
 
         return processed_docs
 
-    
-
-    # def _generate_ai_summary(self, text, tables, images) -> str:        
-    #     # Construct context for the LLM
-    #     context_str = f"TEXT:\n{text}\n\n"
-    #     for i, table in enumerate(tables[:3]): #max 3 tables
-    #         context_str += f"TABLE {i+1}:\n{table}\n\n"
-    
-    #     if images:
-    #         context_str += f"\n[{len(images)} IMAGE(S) WITH DESCRIPTIONS]\n"
-    #         for i, img in enumerate(images[:3], 1):
-    #             description = img.get("description", "No description available")
-    #             if len(description) > 400:
-    #                 description = description[:400] + "..." 
-    #             context_str += f"\nImage {i}: {description}\n"
-
-    #     prompt = f"""You are a concise research summarizer. Create a brief, searchable summary integrating text, tables, and visual elements.
-
-    #     SUMMARY RULES:
-    #     - Extract core findings, methodology, and key results from text
-    #     - Convert tables to brief data statements with exact numbers (e.g., "Accuracy increased from 50% to 85%")
-    #     - Synthesize key insights from image descriptions—extract metrics, trends, and patterns
-    #     - Preserve domain terms, metric names, and visual insights for searchability
-    #     - Never invent data—only use what's explicitly shown
-    #     - Keep under 200 words; prioritize key insights over completeness
-
-    #     CONTENT:
-    #     {context_str}
-
-    #     SUMMARY (direct, no formatting tags):"""
-
-    #     try:
-    #         response = self.llm.invoke([HumanMessage(content=prompt)])
-    #         return response.content
-    #     except Exception as e:
-    #         print(f"Summary failed: {e}")
-    #         return text
