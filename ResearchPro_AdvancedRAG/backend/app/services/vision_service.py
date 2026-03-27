@@ -28,8 +28,7 @@ class MultimodalProcessor:
             #chunking 
             chunks = list(chunker.chunk(dl_doc=docling_doc))
             
-            print(f"Chunks are processed: Total chunks: {len(chunks)}")
-            
+                        
             #pass as langchain documents
             processed_langchain_docs = []
             for chunk in chunks:

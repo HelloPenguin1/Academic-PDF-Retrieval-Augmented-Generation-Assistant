@@ -16,33 +16,45 @@ from pathlib import Path
 import json
 from datetime import datetime
 
-# Add project root to path
-project_root = Path(__file__).parent.parent.parent.parent
-sys.path.insert(0, str(project_root))
+# Add project root to path to allow importing from config
+# Hierarchy: ResearchPro_AdvancedRAG/backend/app/evaluation/evaluate_with_ragas.py
+current_dir = Path(__file__).parent
+project_root = current_dir.parent.parent.parent # Points to ResearchPro_AdvancedRAG
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
-try:
-    from ragas import evaluate
-    from ragas.metrics import (
-        faithfulness,
-        answer_relevancy,
-        context_recall,
-        context_precision,
-    )
-    from datasets import Dataset
-    from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from ragas import evaluate
+from ragas.metrics import (
+    Faithfulness,
+    AnswerRelevancy,
+    ContextRecall,
+    ContextPrecision
+)
+from datasets import Dataset
+from config.config import llm_summarize, hf_embeddings
 
 
-
-def load_rag_results(results_path="backend/app/evaluation/rag_results.json"):
+def load_rag_results(results_path=None):
     """Load the RAG results from JSON file."""
-    print(f"Loading results from: {results_path}")
+    if results_path is None:
+        # Try a few common locations
+        possible_paths = [
+            "backend/app/evaluation/rag_results.json",
+            "ResearchPro_AdvancedRAG/backend/app/evaluation/rag_results.json",
+            os.path.join(os.path.dirname(__file__), "rag_results.json")
+        ]
+        for p in possible_paths:
+            if os.path.exists(p):
+                results_path = p
+                break
     
-    if not os.path.exists(results_path):
+    if not results_path or not os.path.exists(results_path):
         raise FileNotFoundError(
-            f"Results file not found: {results_path}\n"
+            f"Results file not found. Checked: {possible_paths}\n"
             "Please run 'python -m backend.app.evaluation.run_ragas_evaluation' first."
         )
     
+    print(f"Loading results from: {results_path}")
     with open(results_path, 'r', encoding='utf-8') as f:
         results = json.load(f)
     
@@ -64,11 +76,23 @@ def evaluate_with_ragas(test_data):
     print("RUNNING RAGAS EVALUATION")
     print("=" * 80)
     
-    # Initialize evaluator LLM (uses OpenAI by default)
-    print("\n🤖 Initializing evaluator LLM")
-    evaluator_llm = ChatOpenAI(model="gpt-4", temperature=0)
-    evaluator_embeddings = OpenAIEmbeddings()
+    # Initialize evaluator LLM
+    # Using Llama 3.3 70B for better reasoning and higher token limits
+    print("\n🤖 Initializing evaluator LLM (Groq Llama 3.3 70B)")
+    evaluator_llm = llm_summarize
+    evaluator_llm.max_tokens = 4096 # Increase for complex evaluation
+    
+    evaluator_embeddings = hf_embeddings
     print("✅ Evaluator ready")
+    
+    # Initialize Metrics with explicit LLM and Embeddings
+    print("📏 Initializing metrics...")
+    metrics = [
+        Faithfulness(llm=evaluator_llm),
+        AnswerRelevancy(llm=evaluator_llm, embeddings=evaluator_embeddings),
+        ContextRecall(llm=evaluator_llm),
+        ContextPrecision(llm=evaluator_llm)
+    ]
     
     # Convert to HuggingFace Dataset format
     print("\n📊 Converting data to Dataset format...")
@@ -77,20 +101,11 @@ def evaluate_with_ragas(test_data):
     
     # Run evaluation
     print("\n⚡ Running RAGAS evaluation (this may take a few minutes)...")
-    print("Metrics being evaluated:")
-    print("  - Faithfulness: Factual consistency with context")
-    print("  - Answer Relevancy: Relevance to the question")
-    print("  - Context Recall: Completeness of retrieved information")
-    print("  - Context Precision: Relevance of retrieved contexts")
+    print("Metrics: Faithfulness, Answer Relevancy, Context Recall, Context Precision")
     
     result = evaluate(
         dataset,
-        metrics=[
-            faithfulness,
-            answer_relevancy,
-            context_recall,
-            context_precision,
-        ],
+        metrics=metrics,
         llm=evaluator_llm,
         embeddings=evaluator_embeddings,
     )
@@ -105,6 +120,10 @@ def print_results(result):
     print("RAGAS EVALUATION RESULTS")
     print("=" * 80)
     
+    if not result:
+        print("\n❌ No results to display. Evaluation may have failed.")
+        return
+
     # Overall scores
     print("\n📊 Overall Scores:")
     print("─" * 80)

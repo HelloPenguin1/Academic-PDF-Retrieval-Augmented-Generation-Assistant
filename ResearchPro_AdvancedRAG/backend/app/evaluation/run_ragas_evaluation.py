@@ -15,7 +15,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from config.config import llm, hyde_embedding, hf_reranker_encoder
+from config.config import llm, hf_reranker_encoder
 from backend.app.services.document_service import DocumentProcessor
 from backend.app.services.rag_service import RAG_Pipeline
 from backend.app.services.reranker import ReRanker_Model
@@ -101,17 +101,15 @@ def initialize_rag_pipeline(pdf_path: str):
     docs = document_processor.load_and_process_pdf(pdf_path)
     print(f"✅ Processed {len(docs)} document chunks")
     
-    # Create retrievers
-    print("\n🔍 Creating retrievers...")
-    semantic_retriever, syntactic_retriever = document_processor.create_retrievers(docs)
-    hybrid_retriever = rag_pipeline.create_hybrid_retriever(syntactic_retriever, semantic_retriever)
+    # Create retriever
+    print("\n🔍 Creating hybrid retriever...")
+    hybrid_retriever = document_processor.create_retriever(docs)
     print("✅ Hybrid retriever created")
     
     # Create compression retriever with reranker
     print("🎯 Creating compression retriever with reranker...")
     compression_retriever = reranker.create_compression_retriever(hybrid_retriever)
     rag_pipeline.set_compression_retriever(compression_retriever)
-    rag_pipeline.set_document_processor(document_processor)
     print("✅ Compression retriever created")
     
     # Update vectorstore
