@@ -40,7 +40,7 @@ def load_rag_results(results_path=None):
     if results_path is None:
         possible_paths = [
             "ResearchPro_AdvancedRAG/backend/app/evaluation/rag_results.json",
-            os.path.join(os.path.dirname(__file__), "rag_results2.json")
+            os.path.join(os.path.dirname(__file__), "baseline_rag_results.json")
         ]
         for p in possible_paths:
             if os.path.exists(p):

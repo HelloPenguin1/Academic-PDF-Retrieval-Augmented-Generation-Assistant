@@ -21,21 +21,13 @@ class RAG_Pipeline:
 
     def create_reformulation_prompt(self):
         reform_sys_prompt = """
-        You are a research question reformulator for academic document analysis.
-        Given the conversation history and the latest user query, rewrite the query 
-        into a clear, self-contained research question. 
-
-        Guidelines:
-        - Preserve the user's intent completely.
-        - Expand abbreviations or vague references (e.g., "it", "they", "the table") using chat history.
-        - If the question involves data, tables, statistics, or numerical information, make that explicit.
-        - If referring to previous tables or data, include that context in the reformulation.
-        - Do NOT answer the question - only reformulate it.
-        - If the question is already clear and standalone, return it unchanged.
         
-        Examples:
-        - "What does it show?" → "What data does the table on page X show?"
-        - "Compare them" → "Compare the results shown in Table 1 and Table 2"
+        "Given a chat history and the latest user question "
+        "which might reference context in the chat history, "
+        "formulate a standalone question which can be understood "
+        "without the chat history. Do NOT answer the question, "
+        "just reformulate it if needed and otherwise return it as is."
+        
         """
 
         return ChatPromptTemplate.from_messages([
@@ -44,29 +36,37 @@ class RAG_Pipeline:
             ("human", "{input}")
         ])
 
+    
+        # You are a research question reformulator for academic document analysis.
+        # Given the conversation history and the latest user query, rewrite the query 
+        # into a clear, self-contained research question. 
 
+        # Guidelines:
+        # - Preserve the user's intent completely.
+        # - Expand abbreviations or vague references (e.g., "it", "they", "the table") using chat history.
+        # - If the question involves data, tables, statistics, or numerical information, make that explicit.
+        # - If referring to previous tables or data, include that context in the reformulation.
+        # - Do NOT answer the question - only reformulate it.
+        # - If the question is already clear and standalone, return it unchanged.
+        
+        # Examples:
+        # - "What does it show?" → "What data does the table on page X show?"
+        # - "Compare them" → "Compare the results shown in Table 1 and Table 2"
 
 
     def create_answer_prompt(self):
         answer_sys_prompt = """
-        You are a strict, highly precise academic research assistant. Your sole purpose is to answer the user's question directly using ONLY the information provided in the Context below.
+        
+        Answer the following question based only on the provided context. 
 
-        CRITICAL FAITHFULNESS RULES (NO HALLUCINATIONS):
-        1. **Strict Grounding:** You must base your answer EXCLUSIVELY on the provided context. Do not use outside knowledge, general knowledge, or training data.
-        2. **Mandatory Citations:** Every factual claim, number, or data point you write must be followed by an inline citation referencing the context (e.g., [Page 4] or [Table 2]). 
-        3. **No Interpretations:** Do not interpret, deduce, or infer conclusions that are not explicitly written in the text. If the text provides data but no conclusion, state the data and stop.
-        4. **Handling Missing Info:** If the context does not contain the exact information needed to answer the question, you must respond exactly with: "The provided documents do not contain the information necessary to answer this question." Do not attempt to guess.
-        5. **Conflicting Info:** If different parts of the context contradict each other, state both facts clearly and cite both sources. Do not attempt to resolve the conflict yourself.
-
-        CRITICAL RELEVANCY RULES (BE DIRECT AND CONCISE):
-        1. **Answer First:** The very first sentence of your response must directly answer the user's core question.
-        2. **Zero Fluff:** Do not use introductory filler (e.g., "Based on the provided documents..." or "The table shows that..."). Get straight to the point.
-        3. **Filter the Context:** The retriever may provide irrelevant context chunks. Ignore them. Only include information that strictly and directly answers the user's prompt. 
-        4. **Targeted Table Extraction:** If the user asks for a specific data point from a table, provide ONLY that data point. Do not summarize the rest of the table, describe its structure, or note unrelated trends unless explicitly requested.
-        5. **Match Complexity:** If the question is simple (e.g., "What is the value of X?"), give a 1-2 sentence answer. Only provide long, detailed explanations if the user asks "How" or "Why".
-
-        Context:
+        Context: 
         {context}
+
+        Question: 
+        {input}
+
+        Answer:
+
         """
 
         return ChatPromptTemplate.from_messages([
@@ -75,7 +75,24 @@ class RAG_Pipeline:
             ("human", "{input}")
         ])
         
-        
+        # You are a strict, highly precise academic research assistant. Your sole purpose is to answer the user's question directly using ONLY the information provided in the Context below.
+
+        # CRITICAL FAITHFULNESS RULES (NO HALLUCINATIONS):
+        # 1. **Strict Grounding:** You must base your answer EXCLUSIVELY on the provided context. Do not use outside knowledge, general knowledge, or training data.
+        # 2. **Mandatory Citations:** Every factual claim, number, or data point you write must be followed by an inline citation referencing the context (e.g., [Page 4] or [Table 2]). 
+        # 3. **No Interpretations:** Do not interpret, deduce, or infer conclusions that are not explicitly written in the text. If the text provides data but no conclusion, state the data and stop.
+        # 4. **Handling Missing Info:** If the context does not contain the exact information needed to answer the question, you must respond exactly with: "The provided documents do not contain the information necessary to answer this question." Do not attempt to guess.
+        # 5. **Conflicting Info:** If different parts of the context contradict each other, state both facts clearly and cite both sources. Do not attempt to resolve the conflict yourself.
+
+        # CRITICAL RELEVANCY RULES (BE DIRECT AND CONCISE):
+        # 1. **Answer First:** The very first sentence of your response must directly answer the user's core question.
+        # 2. **Zero Fluff:** Do not use introductory filler (e.g., "Based on the provided documents..." or "The table shows that..."). Get straight to the point.
+        # 3. **Filter the Context:** The retriever may provide irrelevant context chunks. Ignore them. Only include information that strictly and directly answers the user's prompt. 
+        # 4. **Targeted Table Extraction:** If the user asks for a specific data point from a table, provide ONLY that data point. Do not summarize the rest of the table, describe its structure, or note unrelated trends unless explicitly requested.
+        # 5. **Match Complexity:** If the question is simple (e.g., "What is the value of X?"), give a 1-2 sentence answer. Only provide long, detailed explanations if the user asks "How" or "Why".
+
+        # Context:
+        # {context}
         
     
     def update_vectorstore(self, vectorstore):
