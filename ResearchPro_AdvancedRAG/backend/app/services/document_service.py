@@ -27,17 +27,17 @@ class DocumentProcessor:
         self.vectorstore = FAISS.from_documents(docs, hf_embeddings)
         semantic_retriever = self.vectorstore.as_retriever(
             search_type="similarity",
-            search_kwargs={"k": 10}
+            search_kwargs={"k": 25}
         )
 
         # Keyword Retriever (BM25)
         print("Creating BM25 retriever...")
-        bm25_retriever = BM25Retriever.from_documents(docs, k=10)
+        bm25_retriever = BM25Retriever.from_documents(docs, k=25)
 
         # Hybrid: 40% BM25, 60% semantic
         hybrid_retriever = EnsembleRetriever(
             retrievers=[bm25_retriever, semantic_retriever],
-            weights=[0.3, 0.7]
+            weights=[0.4, 0.6]
         )
 
         return hybrid_retriever

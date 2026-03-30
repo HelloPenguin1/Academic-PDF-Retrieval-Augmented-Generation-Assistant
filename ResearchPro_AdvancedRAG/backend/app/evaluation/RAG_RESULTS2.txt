@@ -1,0 +1,212 @@
+
+EVAL RUN 1 : Multi-DOC
+Scores of Advanced Pipeline on Multi-Document Vector
+[
+  {
+    "answer_relevancy": 0.7890623173819081,
+    "context_precision": 0.99999999995,
+    "context_recall": 1,
+    "faithfulness": 0.5
+  },
+  {
+    "answer_relevancy": 0.7063880640855243,
+    "context_precision": 0.9999999999666667,
+    "context_recall": 0.5,
+    "faithfulness": 0.7
+  },
+  {
+    "answer_relevancy": 0.8020456351682347,
+    "context_precision": 0.9999999999666667,
+    "context_recall": 0.6666666666666666,
+    "faithfulness": 1
+  },
+  {
+    "answer_relevancy": 0.8096309185403731,
+    "context_precision": 0.99999999995,
+    "context_recall": 1,
+    "faithfulness": 0.36363636363636365
+  },
+  {
+    "answer_relevancy": 0.6929080685372546,
+    "context_precision": 0.8333333332916666,
+    "context_recall": 0.3333333333333333,
+    "faithfulness": 0.625
+  },
+  {
+    "answer_relevancy": 0.7911056537699042,
+    "context_precision": 0.9999999999666667,
+    "context_recall": 0.6666666666666666,
+    "faithfulness": 0.75
+  },
+  {
+    "answer_relevancy": 0.7883479262112134,
+    "context_precision": 0.99999999995,
+    "context_recall": 0,
+    "faithfulness": 0
+  },
+  {
+    "answer_relevancy": 0.7563525889086874,
+    "context_precision": 0.9999999999666667,
+    "context_recall": 0,
+    "faithfulness": 0.42857142857142855
+  },
+  {
+    "answer_relevancy": 0.8163615214746724,
+    "context_precision": 0.9999999999666667,
+    "context_recall": 0.25,
+    "faithfulness": 0
+  },
+  {
+    "answer_relevancy": 0,
+    "context_precision": 0.9999999999666667,
+    "context_recall": 0.5,
+    "faithfulness": 0
+  }
+]
+
+INTERPRETATION
+Context Precision: ~0.98 (Excellent) — Your reranker is doing its job; when it finds the right chunks, it ranks them at the very top.
+Context Recall: ~0.49 (Critical Failure) — This is your biggest bottleneck. Your system is missing the required information for nearly half of the questions.
+Faithfulness: ~0.44 (High Hallucination) — Because recall is low, the LLM is "guessing" or using its own pre-trained knowledge to fill in the gaps.
+Answer Relevancy: ~0.70 (Fair) — The answers look like answers, but they aren't necessarily answering the specific technical nuances.
+
+
+Improvements: 
+1. Increased k-value to 25 for both retrievers, 
+2. increased context to [:6] for RAGAS EVAL, 
+3, changed ensemble weights to [0.4,0.6] from [0.3,0.7]
+////////////////////////////////////////////////////////////////////////////
+
+Scores of Advanced Pipeline on Multi-Document Vector AFTER IMPROVEMENTS
+RUN 2
+[
+  {
+    "answer_relevancy": 0.7678869360736085,
+    "context_precision": 0.8666666666377778,
+    "context_recall": 1,
+    "faithfulness": 1
+  },
+  {
+    "answer_relevancy": 0.7212394153828278,
+    "context_precision": 0.99999999998,
+    "context_recall": 0.5,
+    "faithfulness": 1
+  },
+  {
+    "answer_relevancy": 0.810572115745102,
+    "context_precision": 0.99999999998,
+    "context_recall": 1,
+    "faithfulness": 1
+  },
+  {
+    "answer_relevancy": 0.6896063689440534,
+    "context_precision": 0.8666666666377778,
+    "context_recall": 1,
+    "faithfulness": 0.6
+  },
+  {
+    "answer_relevancy": 0.6798618235937623,
+    "context_precision": 0.99999999998,
+    "context_recall": 1,
+    "faithfulness": 1
+  },
+  {
+    "answer_relevancy": 0.779317507007692,
+    "context_precision": 0.99999999998,
+    "context_recall": 1,
+    "faithfulness": 0.6363636363636364
+  },
+  {
+    "answer_relevancy": 0.660134631057468,
+    "context_precision": 0.9166666666361111,
+    "context_recall": 0,
+    "faithfulness": 0
+  },
+  {
+    "answer_relevancy": 0.8166021223048158,
+    "context_precision": 0.99999999998,
+    "context_recall": 0.75,
+    "faithfulness": 0.42857142857142855
+  },
+  {
+    "answer_relevancy": 0.841703812566981,
+    "context_precision": 0.99999999998,
+    "context_recall": 1,
+    "faithfulness": 0.2857142857142857
+  },
+  {
+    "answer_relevancy": 0.694726584736248,
+    "context_precision": 0.8874999999778125,
+    "context_recall": 0.5,
+    "faithfulness": 0.42857142857142855
+  }
+]
+
+Improvements:
+Optimize prompt to increase faithfulness
+
+
+////////////////////////
+RUN 3
+[
+  {
+    "answer_relevancy": 0.7895587424981436,
+    "context_precision": 0.8666666666377778,
+    "context_recall": 1,
+    "faithfulness": 0.8888888888888888
+  },
+  {
+    "answer_relevancy": 0.7743088192579942,
+    "context_precision": 0.99999999998,
+    "context_recall": 0.5,
+    "faithfulness": 0.9090909090909091
+  },
+  {
+    "answer_relevancy": 0.8242445020031146,
+    "context_precision": 0.99999999998,
+    "context_recall": 1,
+    "faithfulness": 1
+  },
+  {
+    "answer_relevancy": 0.8144372552617448,
+    "context_precision": 0.8666666666377778,
+    "context_recall": 1,
+    "faithfulness": 0.45454545454545453
+  },
+  {
+    "answer_relevancy": 0.6973889721112628,
+    "context_precision": 0.8041666666465626,
+    "context_recall": 1,
+    "faithfulness": 0.7777777777777778
+  },
+  {
+    "answer_relevancy": 0.7641590717256945,
+    "context_precision": 0.99999999998,
+    "context_recall": 1,
+    "faithfulness": 0.7142857142857143
+  },
+  {
+    "answer_relevancy": 0.62195065616972,
+    "context_precision": 0.9166666666361111,
+    "context_recall": 0,
+    "faithfulness": 0
+  },
+  {
+    "answer_relevancy": 0.6760133377420635,
+    "context_precision": 0.99999999998,
+    "context_recall": 0.75,
+    "faithfulness": 0.5714285714285714
+  },
+  {
+    "answer_relevancy": 0.841703812566981,
+    "context_precision": 0.99999999998,
+    "context_recall": 1,
+    "faithfulness": 0.2
+  },
+  {
+    "answer_relevancy": 0.7669213389657531,
+    "context_precision": 0.99999999998,
+    "context_recall": 0.5,
+    "faithfulness": 0.5
+  }
+]

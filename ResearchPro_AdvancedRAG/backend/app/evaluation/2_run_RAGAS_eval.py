@@ -39,8 +39,7 @@ def load_rag_results(results_path=None):
     """Load the pre-computed RAG results from JSON file."""
     if results_path is None:
         possible_paths = [
-            "ResearchPro_AdvancedRAG/backend/app/evaluation/rag_results.json",
-            os.path.join(os.path.dirname(__file__), "baseline_rag_results.json")
+            os.path.join(os.path.dirname(__file__), "multi_doc_results3.json")
         ]
         for p in possible_paths:
             if os.path.exists(p):
