@@ -147,6 +147,8 @@ Optimize prompt to increase faithfulness
 
 
 ////////////////////////
+
+FINAL CHOSEN CONFIG
 RUN 3
 [
   {

@@ -1,0 +1,17 @@
+For Interview Preparation
+"Tell me about this project":
+"I built a RAG system for analyzing multiple academic papers simultaneously. The interesting challenge was that my initial advanced architecture—hybrid retrieval with reranking—actually performed worse than expected on multi-document queries.
+Through systematic evaluation with RAGAS metrics, I identified 'retrieval starvation' as the core issue: the system wasn't retrieving enough relevant chunks from different papers. I solved this by tuning the ensemble weights to favor BM25 more heavily and increasing retrieval depth.
+The optimizations improved context recall by 53% and faithfulness by 39%. What I learned is that architectural sophistication needs empirical validation—I wouldn't have caught this without rigorous metrics and A/B testing against a baseline."
+"What was your biggest technical challenge?":
+"Multi-document retrieval starvation. Initially, my context recall was only 0.49—the system was missing half the required information. This caused the LLM to hallucinate and fill gaps with pretrained knowledge, dropping faithfulness to 0.44.
+I systematically tested three hypotheses:
+
+Retrieval depth too shallow → Increased k from 10 to 25
+Ensemble weights favoring semantic over keyword → Adjusted from 0.3/0.7 to 0.4/0.6
+Prompt not constraining hallucination → Added strict citation requirements
+
+The combination brought recall to 0.75 and faithfulness to 0.61. The key was having quantitative metrics to validate each change."
+"Why didn't your advanced architecture beat the baseline on single documents?":
+"Great question. On a single, well-structured paper like Vision Transformer, simple semantic search already retrieves the right chunks—there's no cross-document confusion to resolve. The reranker adds latency without adding value.
+This taught me that architectural complexity should match task complexity. For production, I'd use semantic-only retrieval on single documents and hybrid retrieval for multi-document queries. That's a 3x latency improvement with equivalent accuracy."
