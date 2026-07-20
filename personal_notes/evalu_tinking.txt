@@ -15,3 +15,40 @@ The combination brought recall to 0.75 and faithfulness to 0.61. The key was hav
 "Why didn't your advanced architecture beat the baseline on single documents?":
 "Great question. On a single, well-structured paper like Vision Transformer, simple semantic search already retrieves the right chunks—there's no cross-document confusion to resolve. The reranker adds latency without adding value.
 This taught me that architectural complexity should match task complexity. For production, I'd use semantic-only retrieval on single documents and hybrid retrieval for multi-document queries. That's a 3x latency improvement with equivalent accuracy."
+
+
+
+
+HOW TO MAKE THIS BETTER
+“I’d treat context recall as a retrieval-coverage problem first, not just a ranking problem. In this pipeline, I’d improve recall by making the retriever see more of the right evidence before reranking. Concretely, I’d:
+
+use section-aware chunking with overlap so relevant passages are not split across boundaries,
+preserve tables, figure captions, and headers as separate retrievable units,
+widen the candidate set before reranking, for example retrieve more chunks and then rerank the best ones,
+strengthen query reformulation so the system keeps technical entities, model names, datasets, and table-specific terms,
+use a hybrid retrieval strategy more deliberately, tuning BM25 vs. dense retrieval weights for different query types,
+and inspect failure cases with RAGAS to see whether misses come from chunking, embedding quality, query formulation, or reranking.”
+Then I’d add:
+“Once recall improves, I’d optimize precision with reranking and context compression so the final answer stays grounded and concise.”
+
+Short version
+If you want a crisp answer:
+
+“I’d improve context recall by increasing retrieval coverage, not by only changing the LLM. I’d improve chunking and chunk overlap, preserve structured evidence like tables and figure captions, expand the candidate set before reranking, and use stronger query reformulation and hybrid retrieval. Then I’d evaluate failures with RAGAS to see exactly where the relevant context is being missed.”
+
+What I’d mention as the most impactful first changes
+Better chunking
+Break documents into smaller, section-aware chunks
+Add overlap between chunks
+Keep table/figure context near the relevant text
+Stronger retrieval coverage
+Retrieve more candidates first
+Then rerank aggressively
+Query reformulation
+Preserve names, tables, datasets, metrics
+Expand vague follow-up questions using conversation history
+Structured evidence handling
+Treat tables and image captions as first-class retrieval units
+Evaluate with RAGAS
+Look at where recall drops
+Identify whether failures are due to chunking, indexing, or query mismatch
