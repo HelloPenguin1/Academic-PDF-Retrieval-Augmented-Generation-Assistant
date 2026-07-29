@@ -7,7 +7,7 @@
 [![Groq](https://img.shields.io/badge/LLM-Groq-purple.svg)](https://groq.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> A production-grade **Advanced RAG (Retrieval-Augmented Generation)** system designed for academic research. Upload any research paper as a PDF and have a **context-aware, citation-grounded conversation** with it — powered by hybrid retrieval, cross-encoder reranking, and multiple specialized LLMs.
+> **Advanced RAG (Retrieval-Augmented Generation)** system designed for academic research. Upload any research paper as a PDF and have a **context-aware, citation-grounded conversation** with it — powered by hybrid retrieval, cross-encoder reranking, and LLMs.
 
 ---
 
@@ -19,9 +19,6 @@
 - [Architecture Overview](#-architecture-overview)
 - [Project Structure](#-project-structure)
 - [API Reference](#-api-reference)
-- [Installation & Setup](#-installation--setup)
-- [Usage](#-usage)
-- [Configuration](#-configuration)
 - [Design Decisions](#-design-decisions)
 
 ---
@@ -135,46 +132,6 @@ User Query
          Response + Session History Update
 ```
 
----
-
-## 📁 Project Structure
-
-```
-ResearchPro_AdvancedRAG/
-│
-├── backend/
-│   ├── __init__.py
-│   ├── app/
-│   │   ├── __init__.py
-│   │   ├── main.py                   # FastAPI app & all API endpoints
-│   │   ├── evaluation/               # Evaluation scripts & results
-│   │   │   ├── single_doc_eval/
-│   │   │   ├── multi_doc_eval/
-│   │   │   └── papers/
-│   │   └── services/
-│   │       ├── __init__.py
-│   │       ├── document_service.py   # DocumentProcessor — FAISS + BM25 hybrid
-│   │       ├── vision_service.py     # MultimodalProcessor — Docling PDF → Markdown
-│   │       ├── rag_service.py        # RAG_Pipeline — chains, prompts, query()
-│   │       └── reranker.py           # ReRanker_Model — cross-encoder compression
-│   └── utils/
-│       ├── __init__.py
-│       └── session_manager.py        # In-memory chat history store (per session UUID)
-│
-├── config/
-│   ├── __init__.py
-│   └── config.py                     # All LLM, embedding, and tokenizer initialization
-│
-├── frontend/
-│   ├── __init__.py
-│   └── streamlit_app.py              # Streamlit chat UI + sidebar controls
-│
-├── .env                              # API keys (not committed)
-├── requirements.txt
-└── README.md
-```
-
----
 
 ## 📡 API Reference
 
@@ -269,19 +226,4 @@ Query reformulation requires only a short output (a rewritten query) and benefit
 ### Why session UUIDs from the frontend?
 Each Streamlit session generates its own UUID, allowing multiple concurrent users to maintain isolated chat histories on the same server instance without any authentication infrastructure.
 
----
 
-## 🗺 Roadmap
-
-- [ ] Multi-document support (cross-paper queries)
-- [ ] Persistent vectorstore (disk-backed FAISS or ChromaDB)
-- [ ] Streaming responses via WebSocket or SSE
-- [ ] RAGAS-based automated evaluation pipeline
-- [ ] Docker Compose setup for one-command deployment
-- [ ] Vision model integration for chart/figure understanding
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
