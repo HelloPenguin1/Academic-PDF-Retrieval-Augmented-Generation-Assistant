@@ -24,7 +24,7 @@ app = FastAPI(
 
 
 # Instantiate classes
-document_processor = Retriever()
+retriever_object = Retriever()
 rag_pipeline = RAG_Pipeline(llm)
 session_manager = SessionManager()
 
@@ -56,15 +56,15 @@ async def upload_file(
             f.write(content)
 
         # Load and process document
-        docs = document_processor.load_processed_pdf(temp_file_path)
+        docs = retriever_object.load_processed_pdf(temp_file_path)
 
         # Create retrievers
-        retriever = document_processor.create_retriever(docs, key=4)
+        retriever = retriever_object.create_retriever(docs, key=4)
         rag_pipeline.set_compression_retriever(retriever)
 
         # Update vectorstore
-        if document_processor.vectorstore:
-            rag_pipeline.update_vectorstore(document_processor.vectorstore)
+        if retriever_object.vectorstore:
+            rag_pipeline.update_vectorstore(retriever_object.vectorstore)
         else:
             raise HTTPException(
                 status_code=500, detail="Vectorstore initialization failed"
@@ -119,7 +119,7 @@ async def deletevectorstore():
     """Clear vectorstore and session state"""
     try:
         rag_pipeline.vectorstore = None
-        document_processor.vectorstore = None
+        retriever_object.vectorstore = None
         rag_pipeline.compression_retriever = None
         rag_pipeline.conversational_rag = None
         session_manager.clear_all_sessions()

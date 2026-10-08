@@ -2,6 +2,7 @@ from langchain.chains import create_history_aware_retriever, create_retrieval_ch
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_core.prompts import PromptTemplate
 
 from config.config import llm_reformulate
 
@@ -67,6 +68,8 @@ class RAG_Pipeline:
         4. **Targeted Table Extraction:** If the user asks for a specific data point from a table, provide ONLY that data point.
         5. **Match Complexity:** If the question is simple (e.g., "What is the value of X?"), give a 1-2 sentence answer. Only provide long, detailed explanations if the user asks "How" or "Why".
 
+        REMINDER: Cite using the [Source: filename] label shown above each context chunk.
+        
         Context:
         {context}
         """
@@ -91,7 +94,7 @@ class RAG_Pipeline:
         )
 
         question_answer_chain = create_stuff_documents_chain(
-            self.llm, self.answer_prompt
+            self.llm, self.answer_prompt, document_prompt=PromptTemplate("[Source : {source}] \n {page_content}")
         )
 
         rag_pipeline = create_retrieval_chain(
