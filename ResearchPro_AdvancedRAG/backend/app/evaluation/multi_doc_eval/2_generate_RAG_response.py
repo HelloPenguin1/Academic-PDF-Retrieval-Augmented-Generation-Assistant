@@ -21,12 +21,13 @@ from datetime import datetime
 
 from backend.app.services.document_service import DocumentProcessor
 from backend.app.services.rag_service import RAG_Pipeline
-from backend.app.services.reranker import ReRanker_Model
 from backend.utils.session_manager import SessionManager
-from config.config import hf_reranker_encoder, llm
+from config.config import llm
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(message)s")
+
+RETRIEVER_KEY = 4
 
 
 test_data = {
@@ -74,7 +75,6 @@ def initialize_rag_pipeline(pdf_paths: list):
     # Instantiate components
     document_processor = DocumentProcessor()
     rag_pipeline = RAG_Pipeline(llm)
-    reranker = ReRanker_Model(hf_reranker_encoder)
     session_manager = SessionManager()
 
     # Load and process all requested PDF documents
@@ -96,14 +96,9 @@ def initialize_rag_pipeline(pdf_paths: list):
 
     # Create retriever
     logger.info("Creating hybrid retriever...")
-    hybrid_retriever = document_processor.create_retriever(docs)
-    logger.info("Hybrid retriever created")
-
-    # Create compression retriever with reranker
-    logger.info("Creating compression retriever with reranker...")
-    compression_retriever = reranker.create_compression_retriever(hybrid_retriever)
-    rag_pipeline.set_compression_retriever(compression_retriever)
-    logger.info("Compression retriever created")
+    retriever = document_processor.create_retriever(docs, key=RETRIEVER_KEY)
+    rag_pipeline.set_compression_retriever(retriever)
+    logger.info("Vector + BM25 + reranking retriever created")
 
     # Update vectorstore
     if document_processor.vectorstore:
@@ -114,7 +109,7 @@ def initialize_rag_pipeline(pdf_paths: list):
 
     # Create RAG chain
     logger.info("Creating conversational RAG chain...")
-    rag_chain = rag_pipeline.create_rag_chain(compression_retriever)
+    rag_chain = rag_pipeline.create_rag_chain(retriever)
     conversational_chain = rag_pipeline.create_conversational_chain(
         rag_chain, session_manager.get_session_history
     )

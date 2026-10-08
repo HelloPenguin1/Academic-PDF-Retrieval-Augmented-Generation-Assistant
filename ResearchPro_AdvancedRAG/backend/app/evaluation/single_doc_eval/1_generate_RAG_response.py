@@ -20,9 +20,10 @@ from datetime import datetime
 
 from backend.app.services.document_service import DocumentProcessor
 from backend.app.services.rag_service import RAG_Pipeline
-from backend.app.services.reranker import ReRanker_Model
 from backend.utils.session_manager import SessionManager
-from config.config import hf_reranker_encoder, llm
+from config.config import llm
+
+RETRIEVER_KEY = 4
 
 # Test data for Vision Transformer paper
 test_data = {
@@ -70,7 +71,6 @@ def initialize_rag_pipeline(pdf_path: str):
     # Instantiate components
     document_processor = DocumentProcessor()
     rag_pipeline = RAG_Pipeline(llm)
-    reranker = ReRanker_Model(hf_reranker_encoder)
     session_manager = SessionManager()
 
     print(f"\n📄 Loading PDF: {pdf_path}")
@@ -81,14 +81,9 @@ def initialize_rag_pipeline(pdf_path: str):
 
     # Create retriever
     print("\n🔍 Creating hybrid retriever...")
-    hybrid_retriever = document_processor.create_retriever(docs)
-    print("✅ Hybrid retriever created")
-
-    # Create compression retriever with reranker
-    print("🎯 Creating compression retriever with reranker...")
-    compression_retriever = reranker.create_compression_retriever(hybrid_retriever)
-    rag_pipeline.set_compression_retriever(compression_retriever)
-    print("✅ Compression retriever created")
+    retriever = document_processor.create_retriever(docs, key=RETRIEVER_KEY)
+    rag_pipeline.set_compression_retriever(retriever)
+    print("✅ Vector + BM25 + reranking retriever created")
 
     # Update vectorstore
     if document_processor.vectorstore:
@@ -99,7 +94,7 @@ def initialize_rag_pipeline(pdf_path: str):
 
     # Create RAG chain
     print("\n⛓️  Creating conversational RAG chain...")
-    rag_chain = rag_pipeline.create_rag_chain(compression_retriever)
+    rag_chain = rag_pipeline.create_rag_chain(retriever)
     conversational_chain = rag_pipeline.create_conversational_chain(
         rag_chain, session_manager.get_session_history
     )

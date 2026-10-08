@@ -6,9 +6,8 @@ from pydantic import BaseModel
 
 from backend.app.services.document_service import DocumentProcessor
 from backend.app.services.rag_service import RAG_Pipeline
-from backend.app.services.reranker import ReRanker_Model
 from backend.utils.session_manager import SessionManager
-from config.config import hf_reranker_encoder, llm
+from config.config import llm
 
 
 class QueryRequest(BaseModel):
@@ -27,7 +26,6 @@ app = FastAPI(
 # Instantiate classes
 document_processor = DocumentProcessor()
 rag_pipeline = RAG_Pipeline(llm)
-reranker = ReRanker_Model(hf_reranker_encoder)
 session_manager = SessionManager()
 
 
@@ -61,13 +59,8 @@ async def upload_file(
         docs = document_processor.load_and_process_pdf(temp_file_path)
 
         # Create retrievers
-        semantic_retriever = document_processor.create_retriever(docs)
-
-        compression_retriever = reranker.create_compression_retriever(
-            semantic_retriever
-        )
-
-        rag_pipeline.set_compression_retriever(compression_retriever)
+        retriever = document_processor.create_retriever(docs, key=4)
+        rag_pipeline.set_compression_retriever(retriever)
 
         # Update vectorstore
         if document_processor.vectorstore:
@@ -78,7 +71,7 @@ async def upload_file(
             )
 
         # Create RAG chain
-        rag_chain = rag_pipeline.create_rag_chain(compression_retriever)
+        rag_chain = rag_pipeline.create_rag_chain(retriever)
         conversational_chain = rag_pipeline.create_conversational_chain(
             rag_chain, session_manager.get_session_history
         )
