@@ -21,7 +21,7 @@ from datetime import datetime
 
 from langchain_community.vectorstores import FAISS
 
-from backend.app.services.document_service import Retriever
+from app.services.retriever_service import Retriever
 from backend.app.services.rag_service import RAG_Pipeline
 from backend.utils.session_manager import SessionManager
 from config.config import hf_embeddings, llm

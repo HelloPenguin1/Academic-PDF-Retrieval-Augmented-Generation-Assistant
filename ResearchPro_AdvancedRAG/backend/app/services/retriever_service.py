@@ -2,7 +2,7 @@ from langchain.retrievers import EnsembleRetriever
 from langchain_community.retrievers import BM25Retriever
 from langchain_community.vectorstores import FAISS
 
-from backend.app.services.vision_service import DocumentProcessor
+from app.services.processor_service import DocumentProcessor
 from backend.app.services.reranker import ReRanker_Model
 from config.config import hf_embeddings, hf_reranker_encoder
 
