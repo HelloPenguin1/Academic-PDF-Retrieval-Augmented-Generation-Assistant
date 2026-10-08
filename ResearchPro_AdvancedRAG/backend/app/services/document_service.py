@@ -1,9 +1,10 @@
-from langchain_community.vectorstores import FAISS
-from langchain_community.retrievers import BM25Retriever
 from langchain.retrievers import EnsembleRetriever
-from config.config import hf_embeddings
+from langchain_community.retrievers import BM25Retriever
+from langchain_community.vectorstores import FAISS
 
 from backend.app.services.vision_service import MultimodalProcessor
+from config.config import hf_embeddings
+
 
 class DocumentProcessor:
     def __init__(self):
@@ -16,7 +17,6 @@ class DocumentProcessor:
 
         return self.processed_docs
 
-
     def create_retriever(self, docs):
         """
         Creates hybrid retriever: BM25 (keyword) + FAISS (semantic) via EnsembleRetriever.
@@ -26,8 +26,7 @@ class DocumentProcessor:
         print("Creating vector store...")
         self.vectorstore = FAISS.from_documents(docs, hf_embeddings)
         semantic_retriever = self.vectorstore.as_retriever(
-            search_type="similarity",
-            search_kwargs={"k": 25}
+            search_type="similarity", search_kwargs={"k": 25}
         )
 
         # Keyword Retriever (BM25)
@@ -36,15 +35,13 @@ class DocumentProcessor:
 
         # Hybrid: 40% BM25, 60% semantic
         hybrid_retriever = EnsembleRetriever(
-            retrievers=[bm25_retriever, semantic_retriever],
-            weights=[0.4, 0.6]
+            retrievers=[bm25_retriever, semantic_retriever], weights=[0.4, 0.6]
         )
 
         return hybrid_retriever
 
-
     def get_statistics(self) -> dict:
         return {
             "processed_documents": len(self.processed_docs),
-            "vectorstore_ready": self.vectorstore is not None
+            "vectorstore_ready": self.vectorstore is not None,
         }

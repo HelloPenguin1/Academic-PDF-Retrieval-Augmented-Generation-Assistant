@@ -1,22 +1,21 @@
-from langchain.chains import RetrievalQA
-from langchain.retrievers import EnsembleRetriever
-from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
+
 from config.config import llm_reformulate
 
 
 class RAG_Pipeline:
-    def __init__(self, llm , vectorstore=None):
+    def __init__(self, llm, vectorstore=None):
         self.llm = llm
         self.vectorstore = vectorstore
         self.hybrid_retriever = None
         self.compression_retriever = None
         self.conversational_rag = None
-        
+
         self.reformulation_prompt = self.create_reformulation_prompt()
-        self.answer_prompt  = self.create_answer_prompt()
+        self.answer_prompt = self.create_answer_prompt()
 
     def create_reformulation_prompt(self):
         # Cleaned up the conflicting instructions. Added rule to preserve specific entity names.
@@ -39,11 +38,13 @@ class RAG_Pipeline:
         - "Is it faster than ResNet?" → "Is the Vision Transformer (ViT) faster than ResNet?"
         """
 
-        return ChatPromptTemplate.from_messages([
-            ("system", reform_sys_prompt),
-            MessagesPlaceholder("chat_history"), 
-            ("human", "{input}")
-        ])
+        return ChatPromptTemplate.from_messages(
+            [
+                ("system", reform_sys_prompt),
+                MessagesPlaceholder("chat_history"),
+                ("human", "{input}"),
+            ]
+        )
 
     def create_answer_prompt(self):
         # Added rules 6 and 7 specifically to stop multi-document hallucinations
@@ -70,12 +71,14 @@ class RAG_Pipeline:
         {context}
         """
 
-        return ChatPromptTemplate.from_messages([
-            ("system", answer_sys_prompt),
-            MessagesPlaceholder("chat_history"),
-            ("human", "{input}")
-        ])
-        
+        return ChatPromptTemplate.from_messages(
+            [
+                ("system", answer_sys_prompt),
+                MessagesPlaceholder("chat_history"),
+                ("human", "{input}"),
+            ]
+        )
+
     def update_vectorstore(self, vectorstore):
         self.vectorstore = vectorstore
 
@@ -84,30 +87,26 @@ class RAG_Pipeline:
 
     def create_rag_chain(self, retriever):
         history_aware_retriever = create_history_aware_retriever(
-            llm_reformulate,
-            retriever,
-            self.reformulation_prompt
+            llm_reformulate, retriever, self.reformulation_prompt
         )
 
         question_answer_chain = create_stuff_documents_chain(
-            self.llm,
-            self.answer_prompt
+            self.llm, self.answer_prompt
         )
 
         rag_pipeline = create_retrieval_chain(
-            history_aware_retriever,
-            question_answer_chain
+            history_aware_retriever, question_answer_chain
         )
 
         return rag_pipeline
-    
+
     def create_conversational_chain(self, rag_chain, get_session_history_func):
         self.conversational_rag = RunnableWithMessageHistory(
             rag_chain,
             get_session_history_func,
             input_messages_key="input",
             history_messages_key="chat_history",
-            output_messages_key="answer"
+            output_messages_key="answer",
         )
 
         return self.conversational_rag
@@ -119,11 +118,10 @@ class RAG_Pipeline:
         try:
             # Run conversational RAG chain (retrieval happens internally)
             response = self.conversational_rag.invoke(
-                {"input": question},
-                config={"configurable": {"session_id": session_id}}
+                {"input": question}, config={"configurable": {"session_id": session_id}}
             )
 
-            return response.get("answer", "No response generated")  
+            return response.get("answer", "No response generated")
 
         except Exception as e:
-            return f"Error processing query: {str(e)}"
+            return f"Error processing query: {e!s}"
