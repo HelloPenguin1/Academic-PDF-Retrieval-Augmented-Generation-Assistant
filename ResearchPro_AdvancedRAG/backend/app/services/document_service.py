@@ -35,12 +35,14 @@ class Retriever:
         return [d for docs in self.docs_by_source.values() for d in docs]
     
     def list_sources(self)-> dict[str, int]:
-        return {'name': len(docs) for name, docs in self.docs_by_source.items()}
+        return {name: len(docs) for name, docs in self.docs_by_source.items()}
     
     def clear_documents(self):
         self.docs_by_source={}
         self.vectorstore = None
-        
+    
+    def remove_document(self, source_name: str) -> bool:
+        return self.docs_by_source.pop(source_name, None) is not None
 
     def create_retriever(self, docs, key: int = 4):
         """Build a retriever using the configuration selected by key."""

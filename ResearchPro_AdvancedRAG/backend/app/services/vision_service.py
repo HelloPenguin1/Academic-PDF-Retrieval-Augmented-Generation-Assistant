@@ -15,9 +15,9 @@ class DocumentProcessor:
     def load_and_process(self, filepath: str, source_name: str | None = None) -> list[Document]:
         try:
             print("Using Docling for PDF Extraction ...")
-
+            source = source_name or os.path.basename(filepath)
             # convert pdf to docling document
-            docling_result = DocumentConverter().convert(filepath)
+            docling_result = DocumentConverter().convert(filepath)  
             docling_doc = docling_result.document
 
             # intialize chunker
@@ -32,7 +32,7 @@ class DocumentProcessor:
                 doc = Document(
                     page_content=chunk.text,
                     metadata={
-                        "source": source_name,
+                        "source": source,
                         "headings": chunk.meta.headings,
                         "doc_items": [item.label for item in chunk.meta.doc_items],
                     },

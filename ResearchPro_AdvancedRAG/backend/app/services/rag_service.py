@@ -94,7 +94,7 @@ class RAG_Pipeline:
         )
 
         question_answer_chain = create_stuff_documents_chain(
-            self.llm, self.answer_prompt, document_prompt=PromptTemplate("[Source : {source}] \n {page_content}")
+            self.llm, self.answer_prompt, document_prompt=PromptTemplate.from_template("[Source : {source}] \n {page_content}")
         )
 
         rag_pipeline = create_retrieval_chain(
