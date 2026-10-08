@@ -21,7 +21,7 @@ from datetime import datetime
 
 from langchain_community.vectorstores import FAISS
 
-from backend.app.services.document_service import DocumentProcessor
+from backend.app.services.document_service import Retriever
 from backend.app.services.rag_service import RAG_Pipeline
 from backend.utils.session_manager import SessionManager
 from config.config import hf_embeddings, llm
@@ -74,14 +74,14 @@ def initialize_rag_pipeline(pdf_path: str):
     logger.info("INITIALIZING RAG PIPELINE")
 
     # Instantiate components
-    document_processor = DocumentProcessor()
+    document_processor = Retriever()
     rag_pipeline = RAG_Pipeline(llm)
     session_manager = SessionManager()
 
     logger.info("Loading PDF: %s", pdf_path)
 
     # Load and process document
-    docs = document_processor.load_and_process_pdf(pdf_path)
+    docs = document_processor.load_processed_pdf(pdf_path)
     logger.info("Processed %s document chunks", len(docs))
 
     # Create naive semantic retriever from the vectorstore

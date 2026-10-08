@@ -19,7 +19,7 @@ sys.path.insert(0, str(project_root))
 import json
 from datetime import datetime
 
-from backend.app.services.document_service import DocumentProcessor
+from backend.app.services.document_service import Retriever
 from backend.app.services.rag_service import RAG_Pipeline
 from backend.utils.session_manager import SessionManager
 from config.config import llm
@@ -73,7 +73,7 @@ def initialize_rag_pipeline(pdf_paths: list):
     logger.info("INITIALIZING RAG PIPELINE")
 
     # Instantiate components
-    document_processor = DocumentProcessor()
+    document_processor = Retriever()
     rag_pipeline = RAG_Pipeline(llm)
     session_manager = SessionManager()
 
@@ -86,7 +86,7 @@ def initialize_rag_pipeline(pdf_paths: list):
         logger.info("Loading PDF: %s", pdf_path)
         if not os.path.exists(pdf_path):
             raise FileNotFoundError(f"PDF file not found: {pdf_path}")
-        page_docs = document_processor.load_and_process_pdf(pdf_path)
+        page_docs = document_processor.load_processed_pdf(pdf_path)
         docs.extend(page_docs)
         logger.info(
             "Processed %s chunks from %s", len(page_docs), os.path.basename(pdf_path)

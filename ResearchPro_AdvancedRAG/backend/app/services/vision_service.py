@@ -1,5 +1,5 @@
-# from unstructured.partition.pdf import partition_pdf
-# from unstructured.chunking.title import chunk_by_title
+import os
+import traceback
 
 from docling.chunking import HybridChunker
 from docling.document_converter import DocumentConverter
@@ -8,11 +8,11 @@ from langchain.schema import Document
 from config.config import chunking_tokenizer, llm_summarize
 
 
-class MultimodalProcessor:
+class DocumentProcessor:
     def __init__(self):
         self.llm = llm_summarize
 
-    def load_and_process(self, filepath: str) -> list[Document]:
+    def load_and_process(self, filepath: str, source_name: str | None = None) -> list[Document]:
         try:
             print("Using Docling for PDF Extraction ...")
 
@@ -32,6 +32,7 @@ class MultimodalProcessor:
                 doc = Document(
                     page_content=chunk.text,
                     metadata={
+                        "source": source_name,
                         "headings": chunk.meta.headings,
                         "doc_items": [item.label for item in chunk.meta.doc_items],
                     },
@@ -39,8 +40,7 @@ class MultimodalProcessor:
                 processed_langchain_docs.append(doc)
 
             return processed_langchain_docs
+        
         except Exception as e:
-            import traceback
-
             print(traceback.format_exc())
             raise e

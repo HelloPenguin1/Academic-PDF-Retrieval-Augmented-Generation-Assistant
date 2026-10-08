@@ -1,0 +1,32 @@
+A. Build a proper test set (30 question/answer pairs). Write them by hand from your papers, so you aren't relying on what the model says. Include easy lookups, table numbers, exact model names (where keyword search should win), questions needing two parts of a paper, and a few questions the paper can't answer. Right now you have 10 on one paper, and the results are too easy to tell anything apart.
+
+B. Prove the fancy pipeline beats the plain one. Run the 30 questions through four setups: semantic search only, keyword only, hybrid, hybrid + reranker. Put the averages in a table in the README. If hybrid + reranker doesn't win, you've learned something real and can say so.
+
+C. Explain or fix the one question that scores 0 on faithfulness. Check if the model is wrong or if the scorer is misreading a correct "I don't know" answer. Then fix the null scores and clean up the messy results file.
+
+D. Add the exact-match cache (L1). If someone asks the same question twice on the same uploaded document, return the saved answer from Redis instead of running the whole pipeline.
+
+E. Make the cache safe.
+
+Only cache the first question of a conversation (follow-ups depend on earlier messages).
+Tie each saved answer to a fingerprint of the uploaded PDF, so uploading a new file never returns old answers.
+Don't cache errors or "the documents don't contain this" replies.
+On a cache hit, still add the exchange to the chat history so follow-ups work.
+If Redis is down, just run the normal pipeline.
+
+F. Add the similar-question cache (L2), only if time allows. It catches reworded questions ("main contribution?" vs "what does the paper contribute?"). Compare question embeddings, and pick the similarity cutoff by testing it, not by guessing 0.95.
+
+G. Measure the speed honestly. Time 50+ questions for a normal run, an L1 hit, and an L2 hit. Report the median and slow-end (P95) times, and say the hit rate comes from your test questions, not real users.
+
+H. Add real tests. A small test folder using a fake Redis, covering the cache cases in E. Right now you have no automated tests.
+
+I. Fix small things that make the repo look careless.
+
+Make /query a normal function so it stops blocking the server.
+Fix the wrong k=10 comment and the "25 pairs" claim.
+Fix the mutli_doc_results typo.
+Fix the README claim that session IDs are UUIDs, when the default is "default_session".
+
+J. Add a Docker setup. One docker-compose file that starts the app and Redis, so anyone can run it in one command.
+
+K. Rewrite the README top section. Lead with the measured results (quality table, speed numbers), then the architecture, then a short "limitations" list (single shared document, in-memory chat history, no follow-up caching).

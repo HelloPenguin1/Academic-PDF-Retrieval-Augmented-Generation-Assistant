@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
-from backend.app.services.document_service import DocumentProcessor
+from backend.app.services.document_service import Retriever
 from backend.app.services.rag_service import RAG_Pipeline
 from backend.utils.session_manager import SessionManager
 from config.config import llm
@@ -24,7 +24,7 @@ app = FastAPI(
 
 
 # Instantiate classes
-document_processor = DocumentProcessor()
+document_processor = Retriever()
 rag_pipeline = RAG_Pipeline(llm)
 session_manager = SessionManager()
 
@@ -56,7 +56,7 @@ async def upload_file(
             f.write(content)
 
         # Load and process document
-        docs = document_processor.load_and_process_pdf(temp_file_path)
+        docs = document_processor.load_processed_pdf(temp_file_path)
 
         # Create retrievers
         retriever = document_processor.create_retriever(docs, key=4)

@@ -18,7 +18,7 @@ sys.path.insert(0, str(project_root))
 import json
 from datetime import datetime
 
-from backend.app.services.document_service import DocumentProcessor
+from backend.app.services.document_service import Retriever
 from backend.app.services.rag_service import RAG_Pipeline
 from backend.utils.session_manager import SessionManager
 from config.config import llm
@@ -69,14 +69,14 @@ def initialize_rag_pipeline(pdf_path: str):
     print("INITIALIZING RAG PIPELINE")
 
     # Instantiate components
-    document_processor = DocumentProcessor()
+    document_processor = Retriever()
     rag_pipeline = RAG_Pipeline(llm)
     session_manager = SessionManager()
 
     print(f"\n📄 Loading PDF: {pdf_path}")
 
     # Load and process document
-    docs = document_processor.load_and_process_pdf(pdf_path)
+    docs = document_processor.load_processed_pdf(pdf_path)
     print(f"✅ Processed {len(docs)} document chunks")
 
     # Create retriever
