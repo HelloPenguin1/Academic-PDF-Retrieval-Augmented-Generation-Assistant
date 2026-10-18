@@ -5,13 +5,10 @@ from docling.chunking import HybridChunker
 from docling.document_converter import DocumentConverter
 from langchain.schema import Document
 
-from config.config import chunking_tokenizer, llm_summarize
+from config.config import chunking_tokenizer
 
 
 class DocumentProcessor:
-    def __init__(self):
-        self.llm = llm_summarize
-
     def load_and_process(
         self, filepath: str, source_name: str | None = None
     ) -> list[Document]:

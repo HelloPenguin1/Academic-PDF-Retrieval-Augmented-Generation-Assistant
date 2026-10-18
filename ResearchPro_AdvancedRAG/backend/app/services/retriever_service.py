@@ -3,8 +3,8 @@
 from langchain.retrievers import EnsembleRetriever
 from langchain_core.retrievers import BaseRetriever
 
-from app.services.index_service import DocumentIndex
-from app.services.reranker import ReRanker_Model
+from backend.app.services.index_service import DocumentIndex
+from backend.app.services.reranker import ReRanker_Model
 from config.config import hf_reranker_encoder
 
 RETRIEVER_CONFIGS = {

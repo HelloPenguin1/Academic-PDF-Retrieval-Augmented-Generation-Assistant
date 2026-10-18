@@ -46,19 +46,11 @@ llm = ChatGroq(
 
 # Lightweight LLM for query reformulation (reduces rate limit pressure)
 llm_reformulate = ChatGroq(
-    model="llama-3.3-70b-versatile",
+    model="openai/gpt-oss-20b",
     groq_api_key=groq_api_key,
     max_tokens=256,  # Short reformulated queries
     temperature=0.1,
     timeout=10,
-)
-
-llm_summarize = ChatGroq(
-    model="llama-3.3-70b-versatile",
-    groq_api_key=groq_api_key,
-    max_tokens=512,  # Summaries should be brief (512 tokens ≈ 200 words)
-    temperature=0.1,  # Lower temperature for factual summaries
-    timeout=20,  # 20 second timeout)
 )
 
 hf_reranker_encoder = "cross-encoder/ms-marco-MiniLM-L-6-v2"

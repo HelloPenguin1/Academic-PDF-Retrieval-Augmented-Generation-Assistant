@@ -45,7 +45,6 @@ rag_pipeline = RAG_Pipeline(llm)
 session_manager = SessionManager()
 
 
-
 def refresh_pipeline() -> None:
     """Point the RAG chain at the current index contents.
 
@@ -137,7 +136,6 @@ def reset_all():
     refresh_pipeline()
     session_manager.clear_all_sessions()
     return {"message": "All documents and sessions cleared"}
-
 
 
 @app.post("/query")

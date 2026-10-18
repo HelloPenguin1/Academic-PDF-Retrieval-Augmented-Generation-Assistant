@@ -21,7 +21,6 @@ class DocumentIndex:
         self._faiss: FAISS | None = None
         self._bm25: BM25Retriever | None = None
 
-
     def add(self, source: str, docs: list[Document]) -> None:
         """Add a paper. Re-adding an existing source replaces it."""
         if not docs:
@@ -35,7 +34,7 @@ class DocumentIndex:
         else:
             self._faiss.add_documents(docs, ids=ids)
 
-        self._docs_by_source[source] = docs #store in document registry
+        self._docs_by_source[source] = docs  # store in document registry
         self._rebuild_bm25()
 
     def remove(self, source: str) -> bool:
@@ -72,7 +71,9 @@ class DocumentIndex:
 
     def dense_retriever(self, k: int = 25) -> BaseRetriever:
         self._require_data()
-        return self._faiss.as_retriever(search_type="similarity", search_kwargs={"k": k})
+        return self._faiss.as_retriever(
+            search_type="similarity", search_kwargs={"k": k}
+        )
 
     def lexical_retriever(self) -> BaseRetriever:
         self._require_data()
@@ -82,7 +83,9 @@ class DocumentIndex:
 
     def _rebuild_bm25(self) -> None:
         docs = self.all_docs()
-        self._bm25 = BM25Retriever.from_documents(docs, k=self._bm25_k) if docs else None
+        self._bm25 = (
+            BM25Retriever.from_documents(docs, k=self._bm25_k) if docs else None
+        )
 
     def _require_data(self) -> None:
         if self.is_empty:
